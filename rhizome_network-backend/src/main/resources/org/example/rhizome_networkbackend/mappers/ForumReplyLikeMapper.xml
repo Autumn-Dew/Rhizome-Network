@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.rhizome_networkbackend.mappers.ForumReplyLikeMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="org.example.rhizome_networkbackend.entity.po.ForumReplyLike">
+		<!---->
+		<id column="id" property="id"  />
+		<!---->
+		<result column="reply_id" property="replyId"  />
+		<!---->
+		<result column="user_id" property="userId"  />
+		<!---->
+		<result column="create_time" property="createTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 f.id,f.reply_id,f.user_id,f.create_time
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.id != null">
+				 and  f.id = #{query.id}
+			</if>
+			<if test="query.replyId != null">
+				 and  f.reply_id = #{query.replyId}
+			</if>
+			<if test="query.userId != null">
+				 and  f.user_id = #{query.userId}
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  f.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  f.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  f.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM forum_reply_like f <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM forum_reply_like f <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="org.example.rhizome_networkbackend.entity.po.ForumReplyLike">
+		<selectKey keyProperty="bean.id" resultType="Long" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO forum_reply_like
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.replyId != null">
+				 reply_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.replyId!=null">
+				 #{bean.replyId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="org.example.rhizome_networkbackend.entity.po.ForumReplyLike">
+		 INSERT INTO forum_reply_like
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.id != null">
+				 id,
+			</if>
+			<if test="bean.replyId != null">
+				 reply_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.id!=null">
+				 #{bean.id},
+			</if>
+			<if test="bean.replyId!=null">
+				 #{bean.replyId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.replyId!=null">
+				 reply_id = VALUES(reply_id),
+			</if>
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="org.example.rhizome_networkbackend.entity.po.ForumReplyLike" useGeneratedKeys="true" keyProperty="id">
+		 INSERT INTO forum_reply_like(
+			 reply_id,
+			 user_id,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.replyId},
+				 #{item.userId},
+				 #{item.createTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="org.example.rhizome_networkbackend.entity.po.ForumReplyLike">
+		 INSERT INTO forum_reply_like(
+			 reply_id,
+			 user_id,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.replyId},
+				 #{item.userId},
+				 #{item.createTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			reply_id = VALUES(reply_id),
+			user_id = VALUES(user_id),
+			create_time = VALUES(create_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="org.example.rhizome_networkbackend.entity.query.ForumReplyLikeQuery">
+		 UPDATE forum_reply_like f
+ 		 <set> 
+			<if test="bean.replyId != null">
+				 reply_id = #{bean.replyId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete f from forum_reply_like f
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据Id修改-->
+	<update id="updateById" parameterType="org.example.rhizome_networkbackend.entity.po.ForumReplyLike">
+		 UPDATE forum_reply_like
+ 		 <set> 
+			<if test="bean.replyId != null">
+				 reply_id = #{bean.replyId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where id=#{id}
+	</update>
+
+	<!-- 根据Id删除-->
+	<delete id="deleteById">
+		delete from forum_reply_like where id=#{id}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectById" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from forum_reply_like f where id=#{id}
+	</select>
+
+	<!-- 根据UserIdAndReplyId修改-->
+	<update id="updateByUserIdAndReplyId" parameterType="org.example.rhizome_networkbackend.entity.po.ForumReplyLike">
+		 UPDATE forum_reply_like
+ 		 <set> 
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where user_id=#{userId} and reply_id=#{replyId}
+	</update>
+
+	<!-- 根据UserIdAndReplyId删除-->
+	<delete id="deleteByUserIdAndReplyId">
+		delete from forum_reply_like where user_id=#{userId} and reply_id=#{replyId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByUserIdAndReplyId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from forum_reply_like f where user_id=#{userId} and reply_id=#{replyId}
+	</select>
+
+</mapper>

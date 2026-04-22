@@ -1,0 +1,483 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.rhizome_networkbackend.mappers.UserMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="org.example.rhizome_networkbackend.entity.po.User">
+		<!--用户ID-->
+		<id column="user_id" property="userId"  />
+		<!--登录账号-->
+		<result column="account" property="account"  />
+		<!--密码密文-->
+		<result column="password" property="password"  />
+		<!--显示昵称-->
+		<result column="nick_name" property="nickName"  />
+		<!--头像URL-->
+		<result column="avatar_url" property="avatarUrl"  />
+		<!--个性签名-->
+		<result column="signature" property="signature"  />
+		<!--用户权限-->
+		<result column="role" property="role"  />
+		<!--0正常 1禁用-->
+		<result column="status" property="status"  />
+		<!--创建时间-->
+		<result column="create_time" property="createTime"  />
+		<!--更新时间-->
+		<result column="update_time" property="updateTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 u.user_id,u.account,u.password,u.nick_name,u.avatar_url,
+		 u.signature,u.role,u.status,u.create_time,u.update_time
+		 
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.userId != null">
+				 and  u.user_id = #{query.userId}
+			</if>
+			<if test="query.account != null and query.account!=''">
+				 and  u.account = #{query.account}
+			</if>
+			<if test="query.password != null and query.password!=''">
+				 and  u.password = #{query.password}
+			</if>
+			<if test="query.nickName != null and query.nickName!=''">
+				 and  u.nick_name = #{query.nickName}
+			</if>
+			<if test="query.avatarUrl != null and query.avatarUrl!=''">
+				 and  u.avatar_url = #{query.avatarUrl}
+			</if>
+			<if test="query.signature != null and query.signature!=''">
+				 and  u.signature = #{query.signature}
+			</if>
+			<if test="query.role != null and query.role!=''">
+				 and  u.role = #{query.role}
+			</if>
+			<if test="query.status != null">
+				 and  u.status = #{query.status}
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  u.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.updateTime != null and query.updateTime!=''">
+				 <![CDATA[ and  u.update_time=str_to_date(#{query.updateTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.accountFuzzy!= null  and query.accountFuzzy!=''">
+				 and  u.account like concat('%', #{query.accountFuzzy}, '%')
+			</if>
+			<if test="query.passwordFuzzy!= null  and query.passwordFuzzy!=''">
+				 and  u.password like concat('%', #{query.passwordFuzzy}, '%')
+			</if>
+			<if test="query.nickNameFuzzy!= null  and query.nickNameFuzzy!=''">
+				 and  u.nick_name like concat('%', #{query.nickNameFuzzy}, '%')
+			</if>
+			<if test="query.avatarUrlFuzzy!= null  and query.avatarUrlFuzzy!=''">
+				 and  u.avatar_url like concat('%', #{query.avatarUrlFuzzy}, '%')
+			</if>
+			<if test="query.signatureFuzzy!= null  and query.signatureFuzzy!=''">
+				 and  u.signature like concat('%', #{query.signatureFuzzy}, '%')
+			</if>
+			<if test="query.roleFuzzy!= null  and query.roleFuzzy!=''">
+				 and  u.role like concat('%', #{query.roleFuzzy}, '%')
+			</if>
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  u.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  u.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+			<if test="query.updateTimeStart!= null and query.updateTimeStart!=''">
+				 <![CDATA[ and  u.update_time>=str_to_date(#{query.updateTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.updateTimeEnd!= null and query.updateTimeEnd!=''">
+				 <![CDATA[ and  u.update_time< date_sub(str_to_date(#{query.updateTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM user u <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM user u <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="org.example.rhizome_networkbackend.entity.po.User">
+		<selectKey keyProperty="bean.userId" resultType="Long" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO user
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.account != null">
+				 account,
+			</if>
+			<if test="bean.password != null">
+				 password,
+			</if>
+			<if test="bean.nickName != null">
+				 nick_name,
+			</if>
+			<if test="bean.avatarUrl != null">
+				 avatar_url,
+			</if>
+			<if test="bean.signature != null">
+				 signature,
+			</if>
+			<if test="bean.role != null">
+				 role,
+			</if>
+			<if test="bean.status != null">
+				 status,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.account!=null">
+				 #{bean.account},
+			</if>
+			<if test="bean.password!=null">
+				 #{bean.password},
+			</if>
+			<if test="bean.nickName!=null">
+				 #{bean.nickName},
+			</if>
+			<if test="bean.avatarUrl!=null">
+				 #{bean.avatarUrl},
+			</if>
+			<if test="bean.signature!=null">
+				 #{bean.signature},
+			</if>
+			<if test="bean.role!=null">
+				 #{bean.role},
+			</if>
+			<if test="bean.status!=null">
+				 #{bean.status},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+			<if test="bean.updateTime!=null">
+				 #{bean.updateTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="org.example.rhizome_networkbackend.entity.po.User">
+		 INSERT INTO user
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.account != null">
+				 account,
+			</if>
+			<if test="bean.password != null">
+				 password,
+			</if>
+			<if test="bean.nickName != null">
+				 nick_name,
+			</if>
+			<if test="bean.avatarUrl != null">
+				 avatar_url,
+			</if>
+			<if test="bean.signature != null">
+				 signature,
+			</if>
+			<if test="bean.role != null">
+				 role,
+			</if>
+			<if test="bean.status != null">
+				 status,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.account!=null">
+				 #{bean.account},
+			</if>
+			<if test="bean.password!=null">
+				 #{bean.password},
+			</if>
+			<if test="bean.nickName!=null">
+				 #{bean.nickName},
+			</if>
+			<if test="bean.avatarUrl!=null">
+				 #{bean.avatarUrl},
+			</if>
+			<if test="bean.signature!=null">
+				 #{bean.signature},
+			</if>
+			<if test="bean.role!=null">
+				 #{bean.role},
+			</if>
+			<if test="bean.status!=null">
+				 #{bean.status},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+			<if test="bean.updateTime!=null">
+				 #{bean.updateTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.account!=null">
+				 account = VALUES(account),
+			</if>
+			<if test="bean.password!=null">
+				 password = VALUES(password),
+			</if>
+			<if test="bean.nickName!=null">
+				 nick_name = VALUES(nick_name),
+			</if>
+			<if test="bean.avatarUrl!=null">
+				 avatar_url = VALUES(avatar_url),
+			</if>
+			<if test="bean.signature!=null">
+				 signature = VALUES(signature),
+			</if>
+			<if test="bean.role!=null">
+				 role = VALUES(role),
+			</if>
+			<if test="bean.status!=null">
+				 status = VALUES(status),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+			<if test="bean.updateTime!=null">
+				 update_time = VALUES(update_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="org.example.rhizome_networkbackend.entity.po.User" useGeneratedKeys="true" keyProperty="userId">
+		 INSERT INTO user(
+			 account,
+			 password,
+			 nick_name,
+			 avatar_url,
+			 signature,
+			 role,
+			 status,
+			 create_time,
+			 update_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.account},
+				 #{item.password},
+				 #{item.nickName},
+				 #{item.avatarUrl},
+				 #{item.signature},
+				 #{item.role},
+				 #{item.status},
+				 #{item.createTime},
+				 #{item.updateTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="org.example.rhizome_networkbackend.entity.po.User">
+		 INSERT INTO user(
+			 account,
+			 password,
+			 nick_name,
+			 avatar_url,
+			 signature,
+			 role,
+			 status,
+			 create_time,
+			 update_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.account},
+				 #{item.password},
+				 #{item.nickName},
+				 #{item.avatarUrl},
+				 #{item.signature},
+				 #{item.role},
+				 #{item.status},
+				 #{item.createTime},
+				 #{item.updateTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			account = VALUES(account),
+			password = VALUES(password),
+			nick_name = VALUES(nick_name),
+			avatar_url = VALUES(avatar_url),
+			signature = VALUES(signature),
+			role = VALUES(role),
+			status = VALUES(status),
+			create_time = VALUES(create_time),
+			update_time = VALUES(update_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="org.example.rhizome_networkbackend.entity.query.UserQuery">
+		 UPDATE user u
+ 		 <set> 
+			<if test="bean.account != null">
+				 account = #{bean.account},
+			</if>
+			<if test="bean.password != null">
+				 password = #{bean.password},
+			</if>
+			<if test="bean.nickName != null">
+				 nick_name = #{bean.nickName},
+			</if>
+			<if test="bean.avatarUrl != null">
+				 avatar_url = #{bean.avatarUrl},
+			</if>
+			<if test="bean.signature != null">
+				 signature = #{bean.signature},
+			</if>
+			<if test="bean.role != null">
+				 role = #{bean.role},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time = #{bean.updateTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete u from user u
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据UserId修改-->
+	<update id="updateByUserId" parameterType="org.example.rhizome_networkbackend.entity.po.User">
+		 UPDATE user
+ 		 <set> 
+			<if test="bean.account != null">
+				 account = #{bean.account},
+			</if>
+			<if test="bean.password != null">
+				 password = #{bean.password},
+			</if>
+			<if test="bean.nickName != null">
+				 nick_name = #{bean.nickName},
+			</if>
+			<if test="bean.avatarUrl != null">
+				 avatar_url = #{bean.avatarUrl},
+			</if>
+			<if test="bean.signature != null">
+				 signature = #{bean.signature},
+			</if>
+			<if test="bean.role != null">
+				 role = #{bean.role},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time = #{bean.updateTime},
+			</if>
+ 		 </set>
+ 		 where user_id=#{userId}
+	</update>
+
+	<!-- 根据UserId删除-->
+	<delete id="deleteByUserId">
+		delete from user where user_id=#{userId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByUserId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from user u where user_id=#{userId}
+	</select>
+
+	<!-- 根据Account修改-->
+	<update id="updateByAccount" parameterType="org.example.rhizome_networkbackend.entity.po.User">
+		 UPDATE user
+ 		 <set> 
+			<if test="bean.password != null">
+				 password = #{bean.password},
+			</if>
+			<if test="bean.nickName != null">
+				 nick_name = #{bean.nickName},
+			</if>
+			<if test="bean.avatarUrl != null">
+				 avatar_url = #{bean.avatarUrl},
+			</if>
+			<if test="bean.signature != null">
+				 signature = #{bean.signature},
+			</if>
+			<if test="bean.role != null">
+				 role = #{bean.role},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time = #{bean.updateTime},
+			</if>
+ 		 </set>
+ 		 where account=#{account}
+	</update>
+
+	<!-- 根据Account删除-->
+	<delete id="deleteByAccount">
+		delete from user where account=#{account}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByAccount" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from user u where account=#{account}
+	</select>
+
+</mapper>

@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.rhizome_networkbackend.mappers.FavoriteMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="org.example.rhizome_networkbackend.entity.po.Favorite">
+		<!---->
+		<id column="id" property="id"  />
+		<!---->
+		<result column="user_id" property="userId"  />
+		<!--1=歌曲 2=歌单 3=论坛帖子-->
+		<result column="type" property="type"  />
+		<!--目标ID：songKey / playlist_id / post_id-->
+		<result column="target_key" property="targetKey"  />
+		<!---->
+		<result column="create_time" property="createTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 f.id,f.user_id,f.type,f.target_key,f.create_time
+		 
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.id != null">
+				 and  f.id = #{query.id}
+			</if>
+			<if test="query.userId != null">
+				 and  f.user_id = #{query.userId}
+			</if>
+			<if test="query.type != null">
+				 and  f.type = #{query.type}
+			</if>
+			<if test="query.targetKey != null and query.targetKey!=''">
+				 and  f.target_key = #{query.targetKey}
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  f.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.targetKeyFuzzy!= null  and query.targetKeyFuzzy!=''">
+				 and  f.target_key like concat('%', #{query.targetKeyFuzzy}, '%')
+			</if>
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  f.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  f.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM favorite f <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM favorite f <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="org.example.rhizome_networkbackend.entity.po.Favorite">
+		<selectKey keyProperty="bean.id" resultType="Long" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO favorite
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.type != null">
+				 type,
+			</if>
+			<if test="bean.targetKey != null">
+				 target_key,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.type!=null">
+				 #{bean.type},
+			</if>
+			<if test="bean.targetKey!=null">
+				 #{bean.targetKey},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="org.example.rhizome_networkbackend.entity.po.Favorite">
+		 INSERT INTO favorite
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.id != null">
+				 id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.type != null">
+				 type,
+			</if>
+			<if test="bean.targetKey != null">
+				 target_key,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.id!=null">
+				 #{bean.id},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.type!=null">
+				 #{bean.type},
+			</if>
+			<if test="bean.targetKey!=null">
+				 #{bean.targetKey},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.type!=null">
+				 type = VALUES(type),
+			</if>
+			<if test="bean.targetKey!=null">
+				 target_key = VALUES(target_key),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="org.example.rhizome_networkbackend.entity.po.Favorite" useGeneratedKeys="true" keyProperty="id">
+		 INSERT INTO favorite(
+			 user_id,
+			 type,
+			 target_key,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.userId},
+				 #{item.type},
+				 #{item.targetKey},
+				 #{item.createTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="org.example.rhizome_networkbackend.entity.po.Favorite">
+		 INSERT INTO favorite(
+			 user_id,
+			 type,
+			 target_key,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.userId},
+				 #{item.type},
+				 #{item.targetKey},
+				 #{item.createTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			user_id = VALUES(user_id),
+			type = VALUES(type),
+			target_key = VALUES(target_key),
+			create_time = VALUES(create_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="org.example.rhizome_networkbackend.entity.query.FavoriteQuery">
+		 UPDATE favorite f
+ 		 <set> 
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.type != null">
+				 type = #{bean.type},
+			</if>
+			<if test="bean.targetKey != null">
+				 target_key = #{bean.targetKey},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete f from favorite f
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据Id修改-->
+	<update id="updateById" parameterType="org.example.rhizome_networkbackend.entity.po.Favorite">
+		 UPDATE favorite
+ 		 <set> 
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.type != null">
+				 type = #{bean.type},
+			</if>
+			<if test="bean.targetKey != null">
+				 target_key = #{bean.targetKey},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where id=#{id}
+	</update>
+
+	<!-- 根据Id删除-->
+	<delete id="deleteById">
+		delete from favorite where id=#{id}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectById" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from favorite f where id=#{id}
+	</select>
+
+	<!-- 根据UserIdAndTypeAndTargetKey修改-->
+	<update id="updateByUserIdAndTypeAndTargetKey" parameterType="org.example.rhizome_networkbackend.entity.po.Favorite">
+		 UPDATE favorite
+ 		 <set> 
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where user_id=#{userId} and type=#{type} and target_key=#{targetKey}
+	</update>
+
+	<!-- 根据UserIdAndTypeAndTargetKey删除-->
+	<delete id="deleteByUserIdAndTypeAndTargetKey">
+		delete from favorite where user_id=#{userId} and type=#{type} and target_key=#{targetKey}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByUserIdAndTypeAndTargetKey" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from favorite f where user_id=#{userId} and type=#{type} and target_key=#{targetKey}
+	</select>
+
+</mapper>

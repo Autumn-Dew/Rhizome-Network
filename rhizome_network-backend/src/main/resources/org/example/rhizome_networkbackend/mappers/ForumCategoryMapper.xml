@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.rhizome_networkbackend.mappers.ForumCategoryMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="org.example.rhizome_networkbackend.entity.po.ForumCategory">
+		<!--分类ID-->
+		<id column="category_id" property="categoryId"  />
+		<!--分类名称-->
+		<result column="name" property="name"  />
+		<!--分类介绍-->
+		<result column="intro" property="intro"  />
+		<!--封面URL-->
+		<result column="cover_url" property="coverUrl"  />
+		<!--排序-->
+		<result column="sort" property="sort"  />
+		<!--0正常 1禁用-->
+		<result column="status" property="status"  />
+		<!---->
+		<result column="create_time" property="createTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 f.category_id,f.name,f.intro,f.cover_url,f.sort,
+		 f.status,f.create_time
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.categoryId != null">
+				 and  f.category_id = #{query.categoryId}
+			</if>
+			<if test="query.name != null and query.name!=''">
+				 and  f.name = #{query.name}
+			</if>
+			<if test="query.intro != null and query.intro!=''">
+				 and  f.intro = #{query.intro}
+			</if>
+			<if test="query.coverUrl != null and query.coverUrl!=''">
+				 and  f.cover_url = #{query.coverUrl}
+			</if>
+			<if test="query.sort != null">
+				 and  f.sort = #{query.sort}
+			</if>
+			<if test="query.status != null">
+				 and  f.status = #{query.status}
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  f.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.nameFuzzy!= null  and query.nameFuzzy!=''">
+				 and  f.name like concat('%', #{query.nameFuzzy}, '%')
+			</if>
+			<if test="query.introFuzzy!= null  and query.introFuzzy!=''">
+				 and  f.intro like concat('%', #{query.introFuzzy}, '%')
+			</if>
+			<if test="query.coverUrlFuzzy!= null  and query.coverUrlFuzzy!=''">
+				 and  f.cover_url like concat('%', #{query.coverUrlFuzzy}, '%')
+			</if>
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  f.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  f.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM forum_category f <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM forum_category f <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="org.example.rhizome_networkbackend.entity.po.ForumCategory">
+		<selectKey keyProperty="bean.categoryId" resultType="Long" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO forum_category
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.name != null">
+				 name,
+			</if>
+			<if test="bean.intro != null">
+				 intro,
+			</if>
+			<if test="bean.coverUrl != null">
+				 cover_url,
+			</if>
+			<if test="bean.sort != null">
+				 sort,
+			</if>
+			<if test="bean.status != null">
+				 status,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.name!=null">
+				 #{bean.name},
+			</if>
+			<if test="bean.intro!=null">
+				 #{bean.intro},
+			</if>
+			<if test="bean.coverUrl!=null">
+				 #{bean.coverUrl},
+			</if>
+			<if test="bean.sort!=null">
+				 #{bean.sort},
+			</if>
+			<if test="bean.status!=null">
+				 #{bean.status},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="org.example.rhizome_networkbackend.entity.po.ForumCategory">
+		 INSERT INTO forum_category
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.categoryId != null">
+				 category_id,
+			</if>
+			<if test="bean.name != null">
+				 name,
+			</if>
+			<if test="bean.intro != null">
+				 intro,
+			</if>
+			<if test="bean.coverUrl != null">
+				 cover_url,
+			</if>
+			<if test="bean.sort != null">
+				 sort,
+			</if>
+			<if test="bean.status != null">
+				 status,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.categoryId!=null">
+				 #{bean.categoryId},
+			</if>
+			<if test="bean.name!=null">
+				 #{bean.name},
+			</if>
+			<if test="bean.intro!=null">
+				 #{bean.intro},
+			</if>
+			<if test="bean.coverUrl!=null">
+				 #{bean.coverUrl},
+			</if>
+			<if test="bean.sort!=null">
+				 #{bean.sort},
+			</if>
+			<if test="bean.status!=null">
+				 #{bean.status},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.name!=null">
+				 name = VALUES(name),
+			</if>
+			<if test="bean.intro!=null">
+				 intro = VALUES(intro),
+			</if>
+			<if test="bean.coverUrl!=null">
+				 cover_url = VALUES(cover_url),
+			</if>
+			<if test="bean.sort!=null">
+				 sort = VALUES(sort),
+			</if>
+			<if test="bean.status!=null">
+				 status = VALUES(status),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="org.example.rhizome_networkbackend.entity.po.ForumCategory" useGeneratedKeys="true" keyProperty="categoryId">
+		 INSERT INTO forum_category(
+			 name,
+			 intro,
+			 cover_url,
+			 sort,
+			 status,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.name},
+				 #{item.intro},
+				 #{item.coverUrl},
+				 #{item.sort},
+				 #{item.status},
+				 #{item.createTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="org.example.rhizome_networkbackend.entity.po.ForumCategory">
+		 INSERT INTO forum_category(
+			 name,
+			 intro,
+			 cover_url,
+			 sort,
+			 status,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.name},
+				 #{item.intro},
+				 #{item.coverUrl},
+				 #{item.sort},
+				 #{item.status},
+				 #{item.createTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			name = VALUES(name),
+			intro = VALUES(intro),
+			cover_url = VALUES(cover_url),
+			sort = VALUES(sort),
+			status = VALUES(status),
+			create_time = VALUES(create_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="org.example.rhizome_networkbackend.entity.query.ForumCategoryQuery">
+		 UPDATE forum_category f
+ 		 <set> 
+			<if test="bean.name != null">
+				 name = #{bean.name},
+			</if>
+			<if test="bean.intro != null">
+				 intro = #{bean.intro},
+			</if>
+			<if test="bean.coverUrl != null">
+				 cover_url = #{bean.coverUrl},
+			</if>
+			<if test="bean.sort != null">
+				 sort = #{bean.sort},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete f from forum_category f
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据CategoryId修改-->
+	<update id="updateByCategoryId" parameterType="org.example.rhizome_networkbackend.entity.po.ForumCategory">
+		 UPDATE forum_category
+ 		 <set> 
+			<if test="bean.name != null">
+				 name = #{bean.name},
+			</if>
+			<if test="bean.intro != null">
+				 intro = #{bean.intro},
+			</if>
+			<if test="bean.coverUrl != null">
+				 cover_url = #{bean.coverUrl},
+			</if>
+			<if test="bean.sort != null">
+				 sort = #{bean.sort},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where category_id=#{categoryId}
+	</update>
+
+	<!-- 根据CategoryId删除-->
+	<delete id="deleteByCategoryId">
+		delete from forum_category where category_id=#{categoryId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByCategoryId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from forum_category f where category_id=#{categoryId}
+	</select>
+
+</mapper>

@@ -1,0 +1,369 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.rhizome_networkbackend.mappers.PlaylistMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="org.example.rhizome_networkbackend.entity.po.Playlist">
+		<!--歌单ID-->
+		<id column="playlist_id" property="playlistId"  />
+		<!--创建者ID-->
+		<result column="user_id" property="userId"  />
+		<!--歌单名称-->
+		<result column="title" property="title"  />
+		<!--简介-->
+		<result column="intro" property="intro"  />
+		<!--封面URL-->
+		<result column="cover_url" property="coverUrl"  />
+		<!--0私密 1公开-->
+		<result column="is_public" property="isPublic"  />
+		<!--创建时间-->
+		<result column="create_time" property="createTime"  />
+		<!--更新时间-->
+		<result column="update_time" property="updateTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 p.playlist_id,p.user_id,p.title,p.intro,p.cover_url,
+		 p.is_public,p.create_time,p.update_time
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.playlistId != null">
+				 and  p.playlist_id = #{query.playlistId}
+			</if>
+			<if test="query.userId != null">
+				 and  p.user_id = #{query.userId}
+			</if>
+			<if test="query.title != null and query.title!=''">
+				 and  p.title = #{query.title}
+			</if>
+			<if test="query.intro != null and query.intro!=''">
+				 and  p.intro = #{query.intro}
+			</if>
+			<if test="query.coverUrl != null and query.coverUrl!=''">
+				 and  p.cover_url = #{query.coverUrl}
+			</if>
+			<if test="query.isPublic != null">
+				 and  p.is_public = #{query.isPublic}
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  p.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.updateTime != null and query.updateTime!=''">
+				 <![CDATA[ and  p.update_time=str_to_date(#{query.updateTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.titleFuzzy!= null  and query.titleFuzzy!=''">
+				 and  p.title like concat('%', #{query.titleFuzzy}, '%')
+			</if>
+			<if test="query.introFuzzy!= null  and query.introFuzzy!=''">
+				 and  p.intro like concat('%', #{query.introFuzzy}, '%')
+			</if>
+			<if test="query.coverUrlFuzzy!= null  and query.coverUrlFuzzy!=''">
+				 and  p.cover_url like concat('%', #{query.coverUrlFuzzy}, '%')
+			</if>
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  p.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  p.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+			<if test="query.updateTimeStart!= null and query.updateTimeStart!=''">
+				 <![CDATA[ and  p.update_time>=str_to_date(#{query.updateTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.updateTimeEnd!= null and query.updateTimeEnd!=''">
+				 <![CDATA[ and  p.update_time< date_sub(str_to_date(#{query.updateTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM playlist p <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM playlist p <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="org.example.rhizome_networkbackend.entity.po.Playlist">
+		<selectKey keyProperty="bean.playlistId" resultType="Long" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO playlist
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.title != null">
+				 title,
+			</if>
+			<if test="bean.intro != null">
+				 intro,
+			</if>
+			<if test="bean.coverUrl != null">
+				 cover_url,
+			</if>
+			<if test="bean.isPublic != null">
+				 is_public,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.title!=null">
+				 #{bean.title},
+			</if>
+			<if test="bean.intro!=null">
+				 #{bean.intro},
+			</if>
+			<if test="bean.coverUrl!=null">
+				 #{bean.coverUrl},
+			</if>
+			<if test="bean.isPublic!=null">
+				 #{bean.isPublic},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+			<if test="bean.updateTime!=null">
+				 #{bean.updateTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="org.example.rhizome_networkbackend.entity.po.Playlist">
+		 INSERT INTO playlist
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.playlistId != null">
+				 playlist_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.title != null">
+				 title,
+			</if>
+			<if test="bean.intro != null">
+				 intro,
+			</if>
+			<if test="bean.coverUrl != null">
+				 cover_url,
+			</if>
+			<if test="bean.isPublic != null">
+				 is_public,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.playlistId!=null">
+				 #{bean.playlistId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.title!=null">
+				 #{bean.title},
+			</if>
+			<if test="bean.intro!=null">
+				 #{bean.intro},
+			</if>
+			<if test="bean.coverUrl!=null">
+				 #{bean.coverUrl},
+			</if>
+			<if test="bean.isPublic!=null">
+				 #{bean.isPublic},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+			<if test="bean.updateTime!=null">
+				 #{bean.updateTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.title!=null">
+				 title = VALUES(title),
+			</if>
+			<if test="bean.intro!=null">
+				 intro = VALUES(intro),
+			</if>
+			<if test="bean.coverUrl!=null">
+				 cover_url = VALUES(cover_url),
+			</if>
+			<if test="bean.isPublic!=null">
+				 is_public = VALUES(is_public),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+			<if test="bean.updateTime!=null">
+				 update_time = VALUES(update_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="org.example.rhizome_networkbackend.entity.po.Playlist" useGeneratedKeys="true" keyProperty="playlistId">
+		 INSERT INTO playlist(
+			 user_id,
+			 title,
+			 intro,
+			 cover_url,
+			 is_public,
+			 create_time,
+			 update_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.userId},
+				 #{item.title},
+				 #{item.intro},
+				 #{item.coverUrl},
+				 #{item.isPublic},
+				 #{item.createTime},
+				 #{item.updateTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="org.example.rhizome_networkbackend.entity.po.Playlist">
+		 INSERT INTO playlist(
+			 user_id,
+			 title,
+			 intro,
+			 cover_url,
+			 is_public,
+			 create_time,
+			 update_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.userId},
+				 #{item.title},
+				 #{item.intro},
+				 #{item.coverUrl},
+				 #{item.isPublic},
+				 #{item.createTime},
+				 #{item.updateTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			user_id = VALUES(user_id),
+			title = VALUES(title),
+			intro = VALUES(intro),
+			cover_url = VALUES(cover_url),
+			is_public = VALUES(is_public),
+			create_time = VALUES(create_time),
+			update_time = VALUES(update_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="org.example.rhizome_networkbackend.entity.query.PlaylistQuery">
+		 UPDATE playlist p
+ 		 <set> 
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.title != null">
+				 title = #{bean.title},
+			</if>
+			<if test="bean.intro != null">
+				 intro = #{bean.intro},
+			</if>
+			<if test="bean.coverUrl != null">
+				 cover_url = #{bean.coverUrl},
+			</if>
+			<if test="bean.isPublic != null">
+				 is_public = #{bean.isPublic},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time = #{bean.updateTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete p from playlist p
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据PlaylistId修改-->
+	<update id="updateByPlaylistId" parameterType="org.example.rhizome_networkbackend.entity.po.Playlist">
+		 UPDATE playlist
+ 		 <set> 
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.title != null">
+				 title = #{bean.title},
+			</if>
+			<if test="bean.intro != null">
+				 intro = #{bean.intro},
+			</if>
+			<if test="bean.coverUrl != null">
+				 cover_url = #{bean.coverUrl},
+			</if>
+			<if test="bean.isPublic != null">
+				 is_public = #{bean.isPublic},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time = #{bean.updateTime},
+			</if>
+ 		 </set>
+ 		 where playlist_id=#{playlistId}
+	</update>
+
+	<!-- 根据PlaylistId删除-->
+	<delete id="deleteByPlaylistId">
+		delete from playlist where playlist_id=#{playlistId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByPlaylistId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from playlist p where playlist_id=#{playlistId}
+	</select>
+
+</mapper>

@@ -1,0 +1,436 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.rhizome_networkbackend.mappers.PlayRecordMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="org.example.rhizome_networkbackend.entity.po.PlayRecord">
+		<!---->
+		<id column="id" property="id"  />
+		<!---->
+		<result column="user_id" property="userId"  />
+		<!---->
+		<result column="songKey" property="songkey"  />
+		<!--总播放次数-->
+		<result column="total_count" property="totalCount"  />
+		<!--当月播放次数-->
+		<result column="month_count" property="monthCount"  />
+		<!--近7天播放次数-->
+		<result column="week_count" property="weekCount"  />
+		<!--最后播放时间-->
+		<result column="last_play_time" property="lastPlayTime"  />
+		<!---->
+		<result column="create_time" property="createTime"  />
+		<!---->
+		<result column="update_time" property="updateTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 p.id,p.user_id,p.songKey,p.total_count,p.month_count,
+		 p.week_count,p.last_play_time,p.create_time,p.update_time
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.id != null">
+				 and  p.id = #{query.id}
+			</if>
+			<if test="query.userId != null">
+				 and  p.user_id = #{query.userId}
+			</if>
+			<if test="query.songkey != null and query.songkey!=''">
+				 and  p.songKey = #{query.songkey}
+			</if>
+			<if test="query.totalCount != null">
+				 and  p.total_count = #{query.totalCount}
+			</if>
+			<if test="query.monthCount != null">
+				 and  p.month_count = #{query.monthCount}
+			</if>
+			<if test="query.weekCount != null">
+				 and  p.week_count = #{query.weekCount}
+			</if>
+			<if test="query.lastPlayTime != null and query.lastPlayTime!=''">
+				 <![CDATA[ and  p.last_play_time=str_to_date(#{query.lastPlayTime}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  p.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.updateTime != null and query.updateTime!=''">
+				 <![CDATA[ and  p.update_time=str_to_date(#{query.updateTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.songkeyFuzzy!= null  and query.songkeyFuzzy!=''">
+				 and  p.songKey like concat('%', #{query.songkeyFuzzy}, '%')
+			</if>
+			<if test="query.lastPlayTimeStart!= null and query.lastPlayTimeStart!=''">
+				 <![CDATA[ and  p.last_play_time>=str_to_date(#{query.lastPlayTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.lastPlayTimeEnd!= null and query.lastPlayTimeEnd!=''">
+				 <![CDATA[ and  p.last_play_time< date_sub(str_to_date(#{query.lastPlayTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  p.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  p.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+			<if test="query.updateTimeStart!= null and query.updateTimeStart!=''">
+				 <![CDATA[ and  p.update_time>=str_to_date(#{query.updateTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.updateTimeEnd!= null and query.updateTimeEnd!=''">
+				 <![CDATA[ and  p.update_time< date_sub(str_to_date(#{query.updateTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM play_record p <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM play_record p <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="org.example.rhizome_networkbackend.entity.po.PlayRecord">
+		<selectKey keyProperty="bean.id" resultType="Long" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO play_record
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.songkey != null">
+				 songKey,
+			</if>
+			<if test="bean.totalCount != null">
+				 total_count,
+			</if>
+			<if test="bean.monthCount != null">
+				 month_count,
+			</if>
+			<if test="bean.weekCount != null">
+				 week_count,
+			</if>
+			<if test="bean.lastPlayTime != null">
+				 last_play_time,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.songkey!=null">
+				 #{bean.songkey},
+			</if>
+			<if test="bean.totalCount!=null">
+				 #{bean.totalCount},
+			</if>
+			<if test="bean.monthCount!=null">
+				 #{bean.monthCount},
+			</if>
+			<if test="bean.weekCount!=null">
+				 #{bean.weekCount},
+			</if>
+			<if test="bean.lastPlayTime!=null">
+				 #{bean.lastPlayTime},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+			<if test="bean.updateTime!=null">
+				 #{bean.updateTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="org.example.rhizome_networkbackend.entity.po.PlayRecord">
+		 INSERT INTO play_record
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.id != null">
+				 id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.songkey != null">
+				 songKey,
+			</if>
+			<if test="bean.totalCount != null">
+				 total_count,
+			</if>
+			<if test="bean.monthCount != null">
+				 month_count,
+			</if>
+			<if test="bean.weekCount != null">
+				 week_count,
+			</if>
+			<if test="bean.lastPlayTime != null">
+				 last_play_time,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.id!=null">
+				 #{bean.id},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.songkey!=null">
+				 #{bean.songkey},
+			</if>
+			<if test="bean.totalCount!=null">
+				 #{bean.totalCount},
+			</if>
+			<if test="bean.monthCount!=null">
+				 #{bean.monthCount},
+			</if>
+			<if test="bean.weekCount!=null">
+				 #{bean.weekCount},
+			</if>
+			<if test="bean.lastPlayTime!=null">
+				 #{bean.lastPlayTime},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+			<if test="bean.updateTime!=null">
+				 #{bean.updateTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.songkey!=null">
+				 songKey = VALUES(songKey),
+			</if>
+			<if test="bean.totalCount!=null">
+				 total_count = VALUES(total_count),
+			</if>
+			<if test="bean.monthCount!=null">
+				 month_count = VALUES(month_count),
+			</if>
+			<if test="bean.weekCount!=null">
+				 week_count = VALUES(week_count),
+			</if>
+			<if test="bean.lastPlayTime!=null">
+				 last_play_time = VALUES(last_play_time),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+			<if test="bean.updateTime!=null">
+				 update_time = VALUES(update_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="org.example.rhizome_networkbackend.entity.po.PlayRecord" useGeneratedKeys="true" keyProperty="id">
+		 INSERT INTO play_record(
+			 user_id,
+			 songKey,
+			 total_count,
+			 month_count,
+			 week_count,
+			 last_play_time,
+			 create_time,
+			 update_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.userId},
+				 #{item.songkey},
+				 #{item.totalCount},
+				 #{item.monthCount},
+				 #{item.weekCount},
+				 #{item.lastPlayTime},
+				 #{item.createTime},
+				 #{item.updateTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="org.example.rhizome_networkbackend.entity.po.PlayRecord">
+		 INSERT INTO play_record(
+			 user_id,
+			 songKey,
+			 total_count,
+			 month_count,
+			 week_count,
+			 last_play_time,
+			 create_time,
+			 update_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.userId},
+				 #{item.songkey},
+				 #{item.totalCount},
+				 #{item.monthCount},
+				 #{item.weekCount},
+				 #{item.lastPlayTime},
+				 #{item.createTime},
+				 #{item.updateTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			user_id = VALUES(user_id),
+			songKey = VALUES(songKey),
+			total_count = VALUES(total_count),
+			month_count = VALUES(month_count),
+			week_count = VALUES(week_count),
+			last_play_time = VALUES(last_play_time),
+			create_time = VALUES(create_time),
+			update_time = VALUES(update_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="org.example.rhizome_networkbackend.entity.query.PlayRecordQuery">
+		 UPDATE play_record p
+ 		 <set> 
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.songkey != null">
+				 songKey = #{bean.songkey},
+			</if>
+			<if test="bean.totalCount != null">
+				 total_count = #{bean.totalCount},
+			</if>
+			<if test="bean.monthCount != null">
+				 month_count = #{bean.monthCount},
+			</if>
+			<if test="bean.weekCount != null">
+				 week_count = #{bean.weekCount},
+			</if>
+			<if test="bean.lastPlayTime != null">
+				 last_play_time = #{bean.lastPlayTime},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time = #{bean.updateTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete p from play_record p
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据Id修改-->
+	<update id="updateById" parameterType="org.example.rhizome_networkbackend.entity.po.PlayRecord">
+		 UPDATE play_record
+ 		 <set> 
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.songkey != null">
+				 songKey = #{bean.songkey},
+			</if>
+			<if test="bean.totalCount != null">
+				 total_count = #{bean.totalCount},
+			</if>
+			<if test="bean.monthCount != null">
+				 month_count = #{bean.monthCount},
+			</if>
+			<if test="bean.weekCount != null">
+				 week_count = #{bean.weekCount},
+			</if>
+			<if test="bean.lastPlayTime != null">
+				 last_play_time = #{bean.lastPlayTime},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time = #{bean.updateTime},
+			</if>
+ 		 </set>
+ 		 where id=#{id}
+	</update>
+
+	<!-- 根据Id删除-->
+	<delete id="deleteById">
+		delete from play_record where id=#{id}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectById" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from play_record p where id=#{id}
+	</select>
+
+	<!-- 根据UserIdAndSongkey修改-->
+	<update id="updateByUserIdAndSongkey" parameterType="org.example.rhizome_networkbackend.entity.po.PlayRecord">
+		 UPDATE play_record
+ 		 <set> 
+			<if test="bean.totalCount != null">
+				 total_count = #{bean.totalCount},
+			</if>
+			<if test="bean.monthCount != null">
+				 month_count = #{bean.monthCount},
+			</if>
+			<if test="bean.weekCount != null">
+				 week_count = #{bean.weekCount},
+			</if>
+			<if test="bean.lastPlayTime != null">
+				 last_play_time = #{bean.lastPlayTime},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+			<if test="bean.updateTime != null">
+				 update_time = #{bean.updateTime},
+			</if>
+ 		 </set>
+ 		 where user_id=#{userId} and songKey=#{songkey}
+	</update>
+
+	<!-- 根据UserIdAndSongkey删除-->
+	<delete id="deleteByUserIdAndSongkey">
+		delete from play_record where user_id=#{userId} and songKey=#{songkey}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByUserIdAndSongkey" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from play_record p where user_id=#{userId} and songKey=#{songkey}
+	</select>
+
+</mapper>

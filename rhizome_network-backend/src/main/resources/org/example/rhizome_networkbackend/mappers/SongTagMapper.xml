@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.rhizome_networkbackend.mappers.SongTagMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="org.example.rhizome_networkbackend.entity.po.SongTag">
+		<!---->
+		<id column="id" property="id"  />
+		<!---->
+		<result column="songKey" property="songkey"  />
+		<!---->
+		<result column="tag_id" property="tagId"  />
+		<!---->
+		<result column="user_id" property="userId"  />
+		<!---->
+		<result column="create_time" property="createTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 s.id,s.songKey,s.tag_id,s.user_id,s.create_time
+		 
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.id != null">
+				 and  s.id = #{query.id}
+			</if>
+			<if test="query.songkey != null and query.songkey!=''">
+				 and  s.songKey = #{query.songkey}
+			</if>
+			<if test="query.tagId != null">
+				 and  s.tag_id = #{query.tagId}
+			</if>
+			<if test="query.userId != null">
+				 and  s.user_id = #{query.userId}
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  s.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.songkeyFuzzy!= null  and query.songkeyFuzzy!=''">
+				 and  s.songKey like concat('%', #{query.songkeyFuzzy}, '%')
+			</if>
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  s.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  s.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM song_tag s <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM song_tag s <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="org.example.rhizome_networkbackend.entity.po.SongTag">
+		<selectKey keyProperty="bean.id" resultType="Long" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO song_tag
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.songkey != null">
+				 songKey,
+			</if>
+			<if test="bean.tagId != null">
+				 tag_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.songkey!=null">
+				 #{bean.songkey},
+			</if>
+			<if test="bean.tagId!=null">
+				 #{bean.tagId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="org.example.rhizome_networkbackend.entity.po.SongTag">
+		 INSERT INTO song_tag
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.id != null">
+				 id,
+			</if>
+			<if test="bean.songkey != null">
+				 songKey,
+			</if>
+			<if test="bean.tagId != null">
+				 tag_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.id!=null">
+				 #{bean.id},
+			</if>
+			<if test="bean.songkey!=null">
+				 #{bean.songkey},
+			</if>
+			<if test="bean.tagId!=null">
+				 #{bean.tagId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.songkey!=null">
+				 songKey = VALUES(songKey),
+			</if>
+			<if test="bean.tagId!=null">
+				 tag_id = VALUES(tag_id),
+			</if>
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="org.example.rhizome_networkbackend.entity.po.SongTag" useGeneratedKeys="true" keyProperty="id">
+		 INSERT INTO song_tag(
+			 songKey,
+			 tag_id,
+			 user_id,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.songkey},
+				 #{item.tagId},
+				 #{item.userId},
+				 #{item.createTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="org.example.rhizome_networkbackend.entity.po.SongTag">
+		 INSERT INTO song_tag(
+			 songKey,
+			 tag_id,
+			 user_id,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.songkey},
+				 #{item.tagId},
+				 #{item.userId},
+				 #{item.createTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			songKey = VALUES(songKey),
+			tag_id = VALUES(tag_id),
+			user_id = VALUES(user_id),
+			create_time = VALUES(create_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="org.example.rhizome_networkbackend.entity.query.SongTagQuery">
+		 UPDATE song_tag s
+ 		 <set> 
+			<if test="bean.songkey != null">
+				 songKey = #{bean.songkey},
+			</if>
+			<if test="bean.tagId != null">
+				 tag_id = #{bean.tagId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete s from song_tag s
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据Id修改-->
+	<update id="updateById" parameterType="org.example.rhizome_networkbackend.entity.po.SongTag">
+		 UPDATE song_tag
+ 		 <set> 
+			<if test="bean.songkey != null">
+				 songKey = #{bean.songkey},
+			</if>
+			<if test="bean.tagId != null">
+				 tag_id = #{bean.tagId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where id=#{id}
+	</update>
+
+	<!-- 根据Id删除-->
+	<delete id="deleteById">
+		delete from song_tag where id=#{id}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectById" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from song_tag s where id=#{id}
+	</select>
+
+</mapper>

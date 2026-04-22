@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.rhizome_networkbackend.mappers.ForumReplyMapper">
+
+	<!--实体映射-->
+	<resultMap id="base_result_map" type="org.example.rhizome_networkbackend.entity.po.ForumReply">
+		<!--回复ID-->
+		<id column="reply_id" property="replyId"  />
+		<!--帖子ID-->
+		<result column="post_id" property="postId"  />
+		<!--回复人ID-->
+		<result column="user_id" property="userId"  />
+		<!--回复内容-->
+		<result column="content" property="content"  />
+		<!--点赞数-->
+		<result column="like_count" property="likeCount"  />
+		<!--楼中楼回复-->
+		<result column="parent_id" property="parentId"  />
+		<!--0正常 1删除-->
+		<result column="status" property="status"  />
+		<!---->
+		<result column="create_time" property="createTime"  />
+	</resultMap>
+
+
+	<!-- 通用查询结果列-->
+	<sql id="base_column_list">
+		 f.reply_id,f.post_id,f.user_id,f.content,f.like_count,
+		 f.parent_id,f.status,f.create_time
+	</sql>
+
+	<sql id="base_condition_filed">
+			<if test="query.replyId != null">
+				 and  f.reply_id = #{query.replyId}
+			</if>
+			<if test="query.postId != null">
+				 and  f.post_id = #{query.postId}
+			</if>
+			<if test="query.userId != null">
+				 and  f.user_id = #{query.userId}
+			</if>
+			<if test="query.content != null and query.content!=''">
+				 and  f.content = #{query.content}
+			</if>
+			<if test="query.likeCount != null">
+				 and  f.like_count = #{query.likeCount}
+			</if>
+			<if test="query.parentId != null">
+				 and  f.parent_id = #{query.parentId}
+			</if>
+			<if test="query.status != null">
+				 and  f.status = #{query.status}
+			</if>
+			<if test="query.createTime != null and query.createTime!=''">
+				 <![CDATA[ and  f.create_time=str_to_date(#{query.createTime}, '%Y-%m-%d') ]]>
+			</if>
+	</sql>
+
+	<!-- 通用查询条件列-->
+	<sql id="query_condition">
+	 <where>
+			<include refid="base_condition_filed" />
+			<if test="query.contentFuzzy!= null  and query.contentFuzzy!=''">
+				 and  f.content like concat('%', #{query.contentFuzzy}, '%')
+			</if>
+			<if test="query.createTimeStart!= null and query.createTimeStart!=''">
+				 <![CDATA[ and  f.create_time>=str_to_date(#{query.createTimeStart}, '%Y-%m-%d') ]]>
+			</if>
+			<if test="query.createTimeEnd!= null and query.createTimeEnd!=''">
+				 <![CDATA[ and  f.create_time< date_sub(str_to_date(#{query.createTimeEnd},'%Y-%m-%d'),interval -1 day) ]]>
+			</if>
+	 </where>
+	</sql>
+
+	<!-- 查询集合-->
+	<select id="selectList" resultMap="base_result_map" >
+		 SELECT <include refid="base_column_list" /> FROM forum_reply f <include refid="query_condition" />
+		 <if test="query.orderBy!=null">
+			 order by ${query.orderBy}
+		 </if>
+		 <if test="query.simplePage!=null">
+			 limit #{query.simplePage.start},#{query.simplePage.end}
+		 </if>
+	</select>
+
+	<!-- 查询数量-->
+	<select id="selectCount" resultType="java.lang.Integer" >
+		 SELECT count(1) FROM forum_reply f <include refid="query_condition" />
+	</select>
+
+	<!-- 插入 （匹配有值的字段）-->
+	<insert id="insert" parameterType="org.example.rhizome_networkbackend.entity.po.ForumReply">
+		<selectKey keyProperty="bean.replyId" resultType="Long" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+		 INSERT INTO forum_reply
+		 <trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="bean.postId != null">
+				 post_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.content != null">
+				 content,
+			</if>
+			<if test="bean.likeCount != null">
+				 like_count,
+			</if>
+			<if test="bean.parentId != null">
+				 parent_id,
+			</if>
+			<if test="bean.status != null">
+				 status,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides="," >
+			<if test="bean.postId!=null">
+				 #{bean.postId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.content!=null">
+				 #{bean.content},
+			</if>
+			<if test="bean.likeCount!=null">
+				 #{bean.likeCount},
+			</if>
+			<if test="bean.parentId!=null">
+				 #{bean.parentId},
+			</if>
+			<if test="bean.status!=null">
+				 #{bean.status},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 插入或者更新 （匹配有值的字段）-->
+	<insert id="insertOrUpdate" parameterType="org.example.rhizome_networkbackend.entity.po.ForumReply">
+		 INSERT INTO forum_reply
+		 <trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="bean.replyId != null">
+				 reply_id,
+			</if>
+			<if test="bean.postId != null">
+				 post_id,
+			</if>
+			<if test="bean.userId != null">
+				 user_id,
+			</if>
+			<if test="bean.content != null">
+				 content,
+			</if>
+			<if test="bean.likeCount != null">
+				 like_count,
+			</if>
+			<if test="bean.parentId != null">
+				 parent_id,
+			</if>
+			<if test="bean.status != null">
+				 status,
+			</if>
+			<if test="bean.createTime != null">
+				 create_time,
+			</if>
+		 </trim>
+		 <trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="bean.replyId!=null">
+				 #{bean.replyId},
+			</if>
+			<if test="bean.postId!=null">
+				 #{bean.postId},
+			</if>
+			<if test="bean.userId!=null">
+				 #{bean.userId},
+			</if>
+			<if test="bean.content!=null">
+				 #{bean.content},
+			</if>
+			<if test="bean.likeCount!=null">
+				 #{bean.likeCount},
+			</if>
+			<if test="bean.parentId!=null">
+				 #{bean.parentId},
+			</if>
+			<if test="bean.status!=null">
+				 #{bean.status},
+			</if>
+			<if test="bean.createTime!=null">
+				 #{bean.createTime},
+			</if>
+		 </trim>
+		 on DUPLICATE key update 
+		 <trim prefix="" suffix="" suffixOverrides=",">
+			<if test="bean.postId!=null">
+				 post_id = VALUES(post_id),
+			</if>
+			<if test="bean.userId!=null">
+				 user_id = VALUES(user_id),
+			</if>
+			<if test="bean.content!=null">
+				 content = VALUES(content),
+			</if>
+			<if test="bean.likeCount!=null">
+				 like_count = VALUES(like_count),
+			</if>
+			<if test="bean.parentId!=null">
+				 parent_id = VALUES(parent_id),
+			</if>
+			<if test="bean.status!=null">
+				 status = VALUES(status),
+			</if>
+			<if test="bean.createTime!=null">
+				 create_time = VALUES(create_time),
+			</if>
+		 </trim>
+	</insert>
+
+	<!-- 添加 （批量插入）-->
+	<insert id="insertBatch" parameterType="org.example.rhizome_networkbackend.entity.po.ForumReply" useGeneratedKeys="true" keyProperty="replyId">
+		 INSERT INTO forum_reply(
+			 post_id,
+			 user_id,
+			 content,
+			 like_count,
+			 parent_id,
+			 status,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.postId},
+				 #{item.userId},
+				 #{item.content},
+				 #{item.likeCount},
+				 #{item.parentId},
+				 #{item.status},
+				 #{item.createTime}
+			 )
+		 </foreach>
+	</insert>
+
+	<!-- 批量新增修改 （批量插入）-->
+	<insert id="insertOrUpdateBatch" parameterType="org.example.rhizome_networkbackend.entity.po.ForumReply">
+		 INSERT INTO forum_reply(
+			 post_id,
+			 user_id,
+			 content,
+			 like_count,
+			 parent_id,
+			 status,
+			 create_time
+		 )values
+		 <foreach collection="list" item="item" separator=",">
+			 (
+				 #{item.postId},
+				 #{item.userId},
+				 #{item.content},
+				 #{item.likeCount},
+				 #{item.parentId},
+				 #{item.status},
+				 #{item.createTime}
+			 )
+		 </foreach>
+			on DUPLICATE key update 
+			post_id = VALUES(post_id),
+			user_id = VALUES(user_id),
+			content = VALUES(content),
+			like_count = VALUES(like_count),
+			parent_id = VALUES(parent_id),
+			status = VALUES(status),
+			create_time = VALUES(create_time)
+	</insert>
+
+	<!--多条件修改-->
+	<update id="updateByParam" parameterType="org.example.rhizome_networkbackend.entity.query.ForumReplyQuery">
+		 UPDATE forum_reply f
+ 		 <set> 
+			<if test="bean.postId != null">
+				 post_id = #{bean.postId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.content != null">
+				 content = #{bean.content},
+			</if>
+			<if test="bean.likeCount != null">
+				 like_count = #{bean.likeCount},
+			</if>
+			<if test="bean.parentId != null">
+				 parent_id = #{bean.parentId},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 <include refid="query_condition" />
+	</update>
+
+	<!--多条件删除-->
+	<delete id="deleteByParam">
+		 delete f from forum_reply f
+ 		 <include refid="query_condition" />
+	</delete>
+
+	<!-- 根据ReplyId修改-->
+	<update id="updateByReplyId" parameterType="org.example.rhizome_networkbackend.entity.po.ForumReply">
+		 UPDATE forum_reply
+ 		 <set> 
+			<if test="bean.postId != null">
+				 post_id = #{bean.postId},
+			</if>
+			<if test="bean.userId != null">
+				 user_id = #{bean.userId},
+			</if>
+			<if test="bean.content != null">
+				 content = #{bean.content},
+			</if>
+			<if test="bean.likeCount != null">
+				 like_count = #{bean.likeCount},
+			</if>
+			<if test="bean.parentId != null">
+				 parent_id = #{bean.parentId},
+			</if>
+			<if test="bean.status != null">
+				 status = #{bean.status},
+			</if>
+			<if test="bean.createTime != null">
+				 create_time = #{bean.createTime},
+			</if>
+ 		 </set>
+ 		 where reply_id=#{replyId}
+	</update>
+
+	<!-- 根据ReplyId删除-->
+	<delete id="deleteByReplyId">
+		delete from forum_reply where reply_id=#{replyId}
+	</delete>
+
+	<!-- 根据PrimaryKey获取对象-->
+	<select id="selectByReplyId" resultMap="base_result_map" >
+		select <include refid="base_column_list" /> from forum_reply f where reply_id=#{replyId}
+	</select>
+
+</mapper>
